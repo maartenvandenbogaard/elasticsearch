@@ -478,7 +478,7 @@ func (c *Controller) upsertMonitoringContainer(statefulSet *apps.StatefulSet, el
 				fmt.Sprintf("--es.uri=%s", getURI(elasticsearch)),
 				fmt.Sprintf("--web.listen-address=:%d", api.PrometheusExporterPortNumber),
 				fmt.Sprintf("--web.telemetry-path=%s", elasticsearch.StatsService().Path()),
-			}),
+			}, elasticsearch.Spec.Monitor.Args...),
 			Image:           elasticsearchVersion.Spec.Exporter.Image,
 			ImagePullPolicy: core.PullIfNotPresent,
 			Ports: []core.ContainerPort{
@@ -488,7 +488,9 @@ func (c *Controller) upsertMonitoringContainer(statefulSet *apps.StatefulSet, el
 					ContainerPort: int32(api.PrometheusExporterPortNumber),
 				},
 			},
-			Resources: elasticsearch.Spec.Monitor.Resources,
+			Env:             elasticsearch.Spec.Monitor.Env,
+			Resources:       elasticsearch.Spec.Monitor.Resources,
+			SecurityContext: elasticsearch.Spec.Monitor.SecurityContext,
 		}
 		envList := []core.EnvVar{
 			{
