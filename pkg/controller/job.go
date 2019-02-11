@@ -186,7 +186,7 @@ func (c *Controller) createRestoreJob(elasticsearch *api.Elasticsearch, snapshot
 	}
 
 	if c.EnableRBAC {
-		job.Spec.Template.Spec.ServiceAccountName = elasticsearch.OffshootName()
+		job.Spec.Template.Spec.ServiceAccountName = elasticsearch.SnapshotSAName()
 	}
 
 	return c.Client.BatchV1().Jobs(elasticsearch.Namespace).Create(job)
@@ -376,7 +376,7 @@ func (c *Controller) GetSnapshotter(snapshot *api.Snapshot) (*batch.Job, error) 
 	}
 
 	if c.EnableRBAC {
-		job.Spec.Template.Spec.ServiceAccountName = elasticsearch.OffshootName()
+		job.Spec.Template.Spec.ServiceAccountName = elasticsearch.SnapshotSAName()
 	}
 
 	return job, nil

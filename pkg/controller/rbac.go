@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/reference"
 )
 
-func (c *Controller) createServiceAccount(elasticsearch *api.Elasticsearch) error {
+func (c *Controller) createServiceAccount(elasticsearch *api.Elasticsearch, saName string) error {
 	ref, rerr := reference.GetReference(clientsetscheme.Scheme, elasticsearch)
 	if rerr != nil {
 		return rerr
@@ -19,7 +19,7 @@ func (c *Controller) createServiceAccount(elasticsearch *api.Elasticsearch) erro
 	_, _, err := core_util.CreateOrPatchServiceAccount(
 		c.Client,
 		metav1.ObjectMeta{
-			Name:      elasticsearch.OffshootName(),
+			Name:      saName,
 			Namespace: elasticsearch.Namespace,
 		},
 		func(in *core.ServiceAccount) *core.ServiceAccount {
@@ -32,7 +32,14 @@ func (c *Controller) createServiceAccount(elasticsearch *api.Elasticsearch) erro
 
 func (c *Controller) ensureRBACStuff(elasticsearch *api.Elasticsearch) error {
 	// Create New ServiceAccount
-	if err := c.createServiceAccount(elasticsearch); err != nil {
+	if err := c.createServiceAccount(elasticsearch, elasticsearch.OffshootName()); err != nil {
+		if !kerr.IsAlreadyExists(err) {
+			return err
+		}
+	}
+
+	// Create New SNapshot ServiceAccount
+	if err := c.createServiceAccount(elasticsearch, elasticsearch.SnapshotSAName()); err != nil {
 		if !kerr.IsAlreadyExists(err) {
 			return err
 		}
